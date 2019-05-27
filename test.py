@@ -9,7 +9,7 @@ import time
 
 conf_file_path = os.getcwd() + '/client_cfg.ini'
 
-#configure
+# configure
 server_ip = ''
 server_port = ''
 get_ID_url = ''
@@ -19,7 +19,6 @@ iface = ''
 frp_path = ''
 report_period_second = ''
 conf = configparser.ConfigParser()
-
 
 
 def do_post(url, post_data):
@@ -46,16 +45,19 @@ def get_id(host_name):
     id = do_post(url, post_data)
     return id
 
+
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', bytes(iface[:15],'utf-8')))[20:24])
+    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', bytes(iface[:15], 'utf-8')))[20:24])
+
 
 def get_host_name():
     return socket.getfqdn(socket.gethostname())
 
+
 def get_frp():
-    path = os.getcwd()+'/'+frp_path
-    if os.path.exists(path) :
+    path = os.getcwd() + '/' + frp_path
+    if os.path.exists(path):
         frp_conf_file = open(path, mode='r')
         frp_conf_string = frp_conf_file.read()
         frp_conf_file.close()
@@ -63,13 +65,15 @@ def get_frp():
         frp_conf_string = '未配置'
     return frp_conf_string
 
+
 def get_temperature():
     res = str(psutil.sensors_temperatures())
     a = res.find('current')
-    a = res.find('=',a)+1
-    b = res.find(',',a)
+    a = res.find('=', a) + 1
+    b = res.find(',', a)
     temp = res[a:b]
     return temp
+
 
 def configure():
     global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
@@ -106,9 +110,8 @@ def configure():
     if frp_path == '':
         frp_path = '../frp/frpc.ini'
 
-    #获取id
-    host_name =  get_host_name()
-    # host_name = 'pc-1'
+    # 获取id
+    host_name = get_host_name()
     id = get_id(host_name)
 
     conf.set('configure', 'first_run', 'false')
@@ -121,8 +124,9 @@ def configure():
 
     print('配置成功! id是', id)
 
-    with open(conf_file_path,'w') as configfile:
+    with open(conf_file_path, 'w') as configfile:
         conf.write(configfile)
+
 
 def read_conf_from_file():
     global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
@@ -138,11 +142,11 @@ def read_conf_from_file():
     frp_path = config['frp_path']
     report_period_second = config['report_period_second']
 
+
 def report():
-    # global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
     period = int(report_period_second)
 
-    while(True):
+    while (True):
         ip = get_ip()
         frp = get_frp()
         temperatue = get_temperature()
@@ -155,19 +159,22 @@ def report():
             "msg": msg
         }).encode('utf-8')
         url = server_ip + ':' + server_port + report_url
-        print('URL:',url)
+        print('URL:', url)
         print('POST_DATA:', post_data)
-        html = do_post(url, post_data)
+        try:
+            html = do_post(url, post_data)
+        except Exception as e:
+            print(e)
         time.sleep(period)
+
 
 def main():
     global conf
 
     conf.read(conf_file_path)
     config = conf['configure']
-    # print(conf.items('configure'))
 
-    #检查是否是第一次运行
+    # 检查是否是第一次运行
     first_run = config['first_run']
     if first_run == 'true':
         print('首次运行，请先配置！')
