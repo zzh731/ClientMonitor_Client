@@ -4,9 +4,10 @@ import configparser
 import os
 import socket, struct
 import sys
-# import psutil, fcntl
+import psutil, fcntl
+import time
 
-conf_file_path = os.getcwd() + '\client_cfg.ini'
+conf_file_path = os.getcwd() + '/client_cfg.ini'
 
 #configure
 server_ip = ''
@@ -41,33 +42,34 @@ def get_id(host_name):
         "hostName": host_name
     }).encode('utf-8')
     url = server_ip + ':' + server_port + get_ID_url + '/' + host_name
+    print(url)
     id = do_post(url, post_data)
     return id
 
-# def get_ip(ifname):
-#     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#     return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', bytes(ifname[:15],'utf-8')))[20:24])
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', bytes(iface[:15],'utf-8')))[20:24])
 
 def get_host_name():
     return socket.getfqdn(socket.gethostname())
 
 def get_frp():
-    frp_path = os.getcwd()+'/../frp/frpc.ini'
-    if os.path.exists(frp_path) :
-        frp_conf_file = open(frp_path, mode='r')
+    path = os.getcwd()+'/'+frp_path
+    if os.path.exists(path) :
+        frp_conf_file = open(path, mode='r')
         frp_conf_string = frp_conf_file.read()
         frp_conf_file.close()
     else:
         frp_conf_string = '未配置'
     return frp_conf_string
 
-# def get_temperature():
-#     res = str(psutil.sensors_temperatures())
-#     a = res.find('current')
-#     a = res.find('=',a)+1
-#     b = res.find(',',a)
-#     temp = res[a:b]
-#     return temp
+def get_temperature():
+    res = str(psutil.sensors_temperatures())
+    a = res.find('current')
+    a = res.find('=',a)+1
+    b = res.find(',',a)
+    temp = res[a:b]
+    return temp
 
 def configure():
     global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
@@ -83,23 +85,31 @@ def configure():
         print("输入不正确！")
         return -1
 
-    iface = input('网卡名:(ifconfig)')
+    iface = input('网卡名：')
     if iface == '':
         print("输入不正确！")
         return -1
-
-    frp_path = input('frpc.ini路径：（默认是../frp/frpc.ini）')
-    if frp_path == '':
-        frp_path = '../frp/frpc.ini'
 
     report_period_second = input('上报周期：（单位秒，默认是3）')
     if report_period_second == '':
         report_period_second = '3'
 
+    get_ID_url = input('get_ID_url：(默认是/client/getID)')
+    if get_ID_url == '':
+        get_ID_url = '/client/getID'
+
+    report_url = input('report_url：(默认是/client/report)')
+    if report_url == '':
+        report_url = '/client/report'
+
+    frp_path = input('frpc.ini路径：（默认是../frp/frpc.ini）')
+    if frp_path == '':
+        frp_path = '../frp/frpc.ini'
+
     #获取id
     host_name =  get_host_name()
+    # host_name = 'pc-1'
     id = get_id(host_name)
-    print('id=',id)
 
     conf.set('configure', 'first_run', 'false')
     conf.set('configure', 'server_ip', server_ip)
@@ -107,10 +117,9 @@ def configure():
     conf.set('configure', 'iface', iface)
     conf.set('configure', 'frp_path', frp_path)
     conf.set('configure', 'report_period_second', report_period_second)
+    conf.set('configure', 'id', id)
 
-
-
-    print('配置成功')
+    print('配置成功! id是', id)
 
     with open(conf_file_path,'w') as configfile:
         conf.write(configfile)
@@ -130,16 +139,29 @@ def read_conf_from_file():
     report_period_second = config['report_period_second']
 
 def report():
-    global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
+    # global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
     period = int(report_period_second)
 
     while(True):
-        postdata = urllib.parse.urlencode({
+        ip = get_ip()
+        frp = get_frp()
+        temperatue = get_temperature()
+        msg = ''
+        post_data = urllib.parse.urlencode({
             "id": id,
+            "ipNow": ip,
+            "frpConfig": frp,
+            "temperature": temperatue,
+            "msg": msg
         }).encode('utf-8')
+        url = server_ip + ':' + server_port + report_url
+        print('URL:',url)
+        print('POST_DATA:', post_data)
+        html = do_post(url, post_data)
+        time.sleep(period)
 
 def main():
-    global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
+    global conf
 
     conf.read(conf_file_path)
     config = conf['configure']
@@ -157,6 +179,7 @@ def main():
 
     read_conf_from_file()
 
+    report()
 
 
 if __name__ == '__main__':
