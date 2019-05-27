@@ -7,7 +7,7 @@ import sys
 import psutil, fcntl
 import time
 
-conf_file_path = os.getcwd() + '/client_cfg.ini'
+conf_file_path = os.path.dirname(os.path.realpath(__file__))+'/client_cfg.ini'
 
 # configure
 server_ip = ''
