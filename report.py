@@ -170,8 +170,6 @@ def report():
 
 
 def main():
-    global conf
-
     conf.read(conf_file_path)
     config = conf['configure']
 
