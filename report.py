@@ -41,7 +41,6 @@ def get_id(host_name):
         "hostName": host_name
     }).encode('utf-8')
     url = server_ip + ':' + server_port + get_ID_url + '/' + host_name
-    print(url)
     id = do_post(url, post_data)
     return id
 
@@ -181,9 +180,13 @@ def main():
         print('首次运行，请先配置！')
         configure()
         return 0
-    elif len(sys.argv) > 0 and sys.argv[1] == '-c':
-        configure()
-        return 1
+    elif len(sys.argv) > 0:
+        if sys.argv[1] == '-c':
+            configure()
+            return 1
+        else:
+            print('命令有误！-c是配置')
+            return -1
 
     read_conf_from_file()
 
