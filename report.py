@@ -181,7 +181,7 @@ def main():
         print('首次运行，请先配置！')
         configure()
         return 0
-    elif len(sys.argv) > 0 and sys.argv[0] == '-c':
+    elif len(sys.argv) > 0 and sys.argv[1] == '-c':
         configure()
         return 1
 
