@@ -2,9 +2,9 @@ import urllib.request
 import urllib.parse
 import configparser
 import os
-import socket, fcntl, struct
+import socket, struct
 import sys
-import psutil
+# import psutil, fcntl
 
 conf_file_path = os.getcwd() + '\client_cfg.ini'
 
@@ -44,9 +44,9 @@ def get_id(host_name):
     id = do_post(url, post_data)
     return id
 
-def get_ip(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', bytes(ifname[:15],'utf-8')))[20:24])
+# def get_ip(ifname):
+#     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s', bytes(ifname[:15],'utf-8')))[20:24])
 
 def get_host_name():
     return socket.getfqdn(socket.gethostname())
@@ -61,13 +61,13 @@ def get_frp():
         frp_conf_string = '未配置'
     return frp_conf_string
 
-def get_temperature():
-    res = str(psutil.sensors_temperatures())
-    a = res.find('current')
-    a = res.find('=',a)+1
-    b = res.find(',',a)
-    temp = res[a:b]
-    return temp
+# def get_temperature():
+#     res = str(psutil.sensors_temperatures())
+#     a = res.find('current')
+#     a = res.find('=',a)+1
+#     b = res.find(',',a)
+#     temp = res[a:b]
+#     return temp
 
 def configure():
     global conf, server_ip, server_port, get_ID_url, report_url, id, iface, frp_path, report_period_second
@@ -76,6 +76,7 @@ def configure():
     if server_ip == '':
         print("输入不正确！")
         return -1
+    server_ip = 'http://' + server_ip
 
     server_port = input('服务器端口号：')
     if server_port == '':
@@ -89,12 +90,10 @@ def configure():
 
     frp_path = input('frpc.ini路径：（默认是../frp/frpc.ini）')
     if frp_path == '':
-        print("使用默认路径！")
         frp_path = '../frp/frpc.ini'
 
     report_period_second = input('上报周期：（单位秒，默认是3）')
     if report_period_second == '':
-        print("使用默认时间！")
         report_period_second = '3'
 
     #获取id
