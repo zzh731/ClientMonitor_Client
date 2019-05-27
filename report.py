@@ -118,6 +118,8 @@ def configure():
     conf.set('configure', 'server_ip', server_ip)
     conf.set('configure', 'server_port', server_port)
     conf.set('configure', 'iface', iface)
+    conf.set('configure', 'get_ID_url', get_ID_url)
+    conf.set('configure', 'report_url', report_url)
     conf.set('configure', 'frp_path', frp_path)
     conf.set('configure', 'report_period_second', report_period_second)
     conf.set('configure', 'id', id)
