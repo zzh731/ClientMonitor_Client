@@ -180,7 +180,7 @@ def main():
         print('首次运行，请先配置！')
         configure()
         return 0
-    elif len(sys.argv) > 0:
+    elif len(sys.argv) > 1:
         if sys.argv[1] == '-c':
             configure()
             return 1
