@@ -163,6 +163,7 @@ def report():
         print('POST_DATA:', post_data)
         try:
             html = do_post(url, post_data)
+            print('RESPONSE:', html)
         except Exception as e:
             print(e)
         time.sleep(period)
