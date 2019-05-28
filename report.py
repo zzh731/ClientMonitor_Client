@@ -57,7 +57,7 @@ def get_host_name():
 
 
 def get_frp():
-    path = os.getcwd() + '/' + frp_path
+    path = os.path.dirname(os.path.realpath(__file__)) + '/' + frp_path
     if os.path.exists(path):
         frp_conf_file = open(path, mode='r')
         frp_conf_string = frp_conf_file.read()
